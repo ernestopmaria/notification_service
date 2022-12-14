@@ -10,13 +10,13 @@ export class AppService {
     return this.prisma.notification.findMany();
   }
 
-  create(content, category) {
+  create(content, category, recipientId) {
     return this.prisma.notification.create({
       data: {
         id: randomUUID(),
         content,
         category,
-        recipientId: randomUUID(),
+        recipientId,
       },
     });
   }
