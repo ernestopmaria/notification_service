@@ -6,22 +6,54 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class PrismaNotificationsRepository implements NotificationsRepository {
-  constructor(private prismaSerive: PrismaService) {}
-  countManyByRecipientId(recipientId: string): Promise<number> {
-    throw new Error('Method not implemented.');
+  constructor(private prisma: PrismaService) {}
+
+  async findById(notificationId: string): Promise<Notification | null> {
+    const notification = await this.prisma.notification.findUnique({
+      where: {
+        id: notificationId,
+      },
+    });
+    if (!notification) {
+      return null;
+    }
+    return PrismaNotificationMapper.toDomain(notification);
+  }
+  async save(notification: Notification): Promise<void> {
+    const prismaNotificationData =
+      PrismaNotificationMapper.toPrisma(notification);
+    await this.prisma.notification.update({
+      where: {
+        id: prismaNotificationData.id,
+      },
+      data: prismaNotificationData,
+    });
   }
 
   async create(notification: Notification): Promise<void> {
     const prismaNotificationData =
       PrismaNotificationMapper.toPrisma(notification);
-    await this.prismaSerive.notification.create({
+    await this.prisma.notification.create({
       data: prismaNotificationData,
     });
   }
-  async findById(notificationId: string): Promise<Notification | null> {
-    throw new Error('Method not implemented.');
+
+  async findManyByRecipientId(recipientId: string): Promise<Notification[]> {
+    const notifications = await this.prisma.notification.findMany({
+      where: {
+        recipientId,
+      },
+    });
+
+    return notifications.map(PrismaNotificationMapper.toDomain);
   }
-  async save(notification: Notification): Promise<void> {
-    throw new Error('Method not implemented.');
+
+  async countManyByRecipientId(recipientId: string): Promise<number> {
+    const count = await this.prisma.notification.count({
+      where: {
+        recipientId,
+      },
+    });
+    return count;
   }
 }
